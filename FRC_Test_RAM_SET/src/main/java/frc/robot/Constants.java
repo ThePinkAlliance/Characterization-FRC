@@ -67,8 +67,8 @@ public final class Constants {
   public static final class AutoConstants {
     public static final Pose2d startPos = new Pose2d(0, 0, new Rotation2d(0));
 
-    public static final double kMaxSpeedMetersPerSecond = 1;
-    public static final double kMaxAccelerationMetersPerSecondSquared = 1;
+    public static final double kMaxSpeedMetersPerSecond = 3;
+    public static final double kMaxAccelerationMetersPerSecondSquared = 3;
 
     // Reasonable baseline values for a RAMSETE follower in units of meters and
     // seconds

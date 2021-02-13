@@ -7,6 +7,7 @@ package frc.robot.commands;
 import java.util.List;
 
 import edu.wpi.first.wpilibj.geometry.Pose2d;
+import edu.wpi.first.wpilibj.geometry.Rotation2d;
 import edu.wpi.first.wpilibj.geometry.Translation2d;
 import edu.wpi.first.wpilibj.trajectory.Trajectory;
 import edu.wpi.first.wpilibj2.command.CommandBase;
@@ -18,7 +19,7 @@ public class CommandDrive extends CommandBase {
   /** Creates a new CommandDrive. */
 
   private final DriveSubsystem m_drive = new DriveSubsystem();
-  private final TrajectoryBuilder m_builder = new TrajectoryBuilder(m_drive);
+  public final TrajectoryBuilder m_builder = new TrajectoryBuilder(m_drive);
 
   public CommandDrive() {
     // Use addRequirements() here to declare subsystem dependencies.
@@ -27,14 +28,15 @@ public class CommandDrive extends CommandBase {
   // Called when the command is initially scheduled.
   @Override
   public void initialize() {
+    Trajectory cmdDrive = m_builder.Create(AutoConstants.startPos,
+        List.of(new Translation2d(1, 1), new Translation2d(2, -1)), new Pose2d(3, 0, new Rotation2d(0)));
+
+    m_builder.Drive(cmdDrive);
   }
 
   // Called every time the scheduler runs while the command is scheduled.
   @Override
   public void execute() {
-    Trajectory cmdDrive = m_builder.Create(AutoConstants.startPos, List.of(), new Pose2d(3, 0, null));
-
-    m_builder.Drive(cmdDrive);
   }
 
   // Called once the command ends or is interrupted.

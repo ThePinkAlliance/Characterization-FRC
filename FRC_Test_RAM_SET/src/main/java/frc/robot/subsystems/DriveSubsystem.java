@@ -9,14 +9,13 @@ import java.util.function.Supplier;
 import com.ctre.phoenix.motorcontrol.FeedbackDevice;
 import com.ctre.phoenix.motorcontrol.NeutralMode;
 import com.ctre.phoenix.motorcontrol.can.WPI_TalonFX;
+import com.kauailabs.navx.frc.AHRS;
 
-import edu.wpi.first.wpilibj.ADXRS450_Gyro;
+import edu.wpi.first.wpilibj.SPI;
 import edu.wpi.first.wpilibj.Encoder;
-import edu.wpi.first.wpilibj.SpeedControllerGroup;
 import edu.wpi.first.wpilibj.drive.DifferentialDrive;
 import frc.robot.Constants.DriveConstants;
 import edu.wpi.first.wpilibj.geometry.Pose2d;
-import edu.wpi.first.wpilibj.interfaces.Gyro;
 import edu.wpi.first.wpilibj.kinematics.DifferentialDriveOdometry;
 import edu.wpi.first.wpilibj.kinematics.DifferentialDriveWheelSpeeds;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
@@ -44,25 +43,15 @@ public class DriveSubsystem extends SubsystemBase {
   // The robot's drive
   private final DifferentialDrive m_drive = new DifferentialDrive(m_left, m_right);
 
-  // The left-side drive encoder
-  private final Encoder m_leftEncoder = new Encoder(DriveConstants.kLeftEncoderPorts[0],
-      DriveConstants.kLeftEncoderPorts[1], DriveConstants.kLeftEncoderReversed);
-
-  // The right-side drive encoder
-  private final Encoder m_rightEncoder = new Encoder(DriveConstants.kRightEncoderPorts[0],
-      DriveConstants.kRightEncoderPorts[1], DriveConstants.kRightEncoderReversed);
-
   // The gyro sensor
-  private final Gyro m_gyro = new ADXRS450_Gyro();
+  private final AHRS m_gyro = new AHRS(SPI.Port.kMXP);
 
   // Odometry class for tracking robot pose
   private final DifferentialDriveOdometry m_odometry;
 
   /** Creates a new DriveSubsystem. */
   public DriveSubsystem() {
-    // Sets the distance per pulse for the encoders
-    m_leftEncoder.setDistancePerPulse(DriveConstants.kEncoderDistancePerPulse);
-    m_rightEncoder.setDistancePerPulse(DriveConstants.kEncoderDistancePerPulse);
+    gyroAngleRadians = () -> -1 * Math.toRadians(m_gyro.getAngle());
 
     resetEncoders();
     m_odometry = new DifferentialDriveOdometry(m_gyro.getRotation2d());
@@ -114,10 +103,34 @@ public class DriveSubsystem extends SubsystemBase {
 
   }
 
+  public double GetEncoderPos(WPI_TalonFX motor, Sides side) {
+    switch (side) {
+      // setup encoder and data collecting methods
+
+      case RIGHT:
+        // set right side methods = encoder methods
+
+        motor.setSensorPhase(false);
+        double RightPos = (motor.getSelectedSensorPosition(PIDIDX) * DriveConstants.encoderConstant); // -1.0;
+
+        return RightPos;
+      case LEFT:
+        motor.setSensorPhase(false);
+
+        double LeftPos = (motor.getSelectedSensorPosition(PIDIDX) * DriveConstants.encoderConstant);
+
+        return LeftPos;
+      default:
+        // probably do nothing
+        return 0;
+
+    }
+  }
+
   @Override
   public void periodic() {
     // Update the odometry in the periodic block
-    m_odometry.update(m_gyro.getRotation2d(), leftEncoderPosition.get(), rightEncoderPosition.get());
+    m_odometry.update(m_gyro.getRotation2d(), GetEncoderPos(m_left, Sides.LEFT), GetEncoderPos(m_right, Sides.RIGHT));
   }
 
   /**
@@ -189,18 +202,18 @@ public class DriveSubsystem extends SubsystemBase {
    *
    * @return the left drive encoder
    */
-  // public Encoder getLeftEncoder() {
-  // return m_leftEncoder;
-  // }
+  public Encoder getLeftEncoder() {
+    return null;
+  }
 
   /**
    * Gets the right drive encoder.
    *
    * @return the right drive encoder
    */
-  // public Encoder getRightEncoder() {
-  // return m_rightEncoder;
-  // }
+  public Encoder getRightEncoder() {
+    return null;
+  }
 
   /**
    * Sets the max output of the drive. Useful for scaling the drive to drive more

@@ -23,13 +23,17 @@ public class CommandDrive extends CommandBase {
 
   public CommandDrive() {
     // Use addRequirements() here to declare subsystem dependencies.
+    addRequirements(m_drive);
+    addRequirements(m_builder);
   }
 
   // Called when the command is initially scheduled.
   @Override
   public void initialize() {
-    Trajectory cmdDrive = m_builder.Create(AutoConstants.startPos,
-        List.of(new Translation2d(1, 1), new Translation2d(2, -1)), new Pose2d(3, 0, new Rotation2d(0)));
+    System.out.println("command initialized");
+
+    Trajectory cmdDrive = m_builder.Create(AutoConstants.startPos, List.of(new Translation2d(4, 0)),
+        new Pose2d(4, 0, new Rotation2d(0)));
 
     m_builder.Drive(cmdDrive);
   }

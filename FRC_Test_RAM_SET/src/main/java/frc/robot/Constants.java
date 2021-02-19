@@ -25,17 +25,24 @@ public final class Constants {
 
     public static double encoderConstant = (1 / GEARING) * (1 / ENCODER_EDGES_PER_REV);
 
-    public static final int kLeftMotor1Port = 1;
-    public static final int kLeftMotor2Port = 0;
-    public static final int kRightMotor1Port = 2;
-    public static final int kRightMotor2Port = 3;
+    // left front
+    public static final int kLeftMotor1Port = 4;
+
+    // left back
+    public static final int kLeftMotor2Port = 5;
+
+    // right front
+    public static final int kRightMotor1Port = 7;
+
+    // right back
+    public static final int kRightMotor2Port = 6;
 
     public static final int[] kLeftEncoderPorts = new int[] { 1, 0 };
-    public static final int[] kRightEncoderPorts = new int[] { 2, 3 };
+    public static final int[] kRightEncoderPorts = new int[] { 3, 2 };
     public static final boolean kLeftEncoderReversed = false;
     public static final boolean kRightEncoderReversed = true;
 
-    public static final double kTrackwidthMeters = 0.69;
+    public static final double kTrackwidthMeters = 1.69;
     public static final DifferentialDriveKinematics kDriveKinematics = new DifferentialDriveKinematics(
         kTrackwidthMeters);
 

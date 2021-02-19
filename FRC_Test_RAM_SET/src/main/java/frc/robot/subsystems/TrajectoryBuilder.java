@@ -56,6 +56,7 @@ public class TrajectoryBuilder extends SubsystemBase {
     return trajectory;
   }
 
+  // if there is an issue it should be in here
   public Command Drive(Trajectory trajectory) {
     RamseteCommand ramseteCommand = new RamseteCommand(trajectory, m_drive::getPose,
         new RamseteController(AutoConstants.kRamseteB, AutoConstants.kRamseteZeta),
@@ -70,6 +71,8 @@ public class TrajectoryBuilder extends SubsystemBase {
     m_drive.resetOdometry(trajectory.getInitialPose());
 
     // Run path following command, then stop at the end.
+
+    // possible that m_drive.tankDriveVolts(0, 0) the zeros need to be a value
     return ramseteCommand.andThen(() -> m_drive.tankDriveVolts(0, 0));
   }
 

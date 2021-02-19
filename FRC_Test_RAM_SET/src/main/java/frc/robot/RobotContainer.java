@@ -73,8 +73,8 @@ public class RobotContainer {
      * @return the command to run in autonomous
      */
     public Command getAutonomousCommand() {
-        Trajectory traj = commandDrive.m_builder.Create(AutoConstants.startPos,
-                List.of(new Translation2d(1, 1), new Translation2d(2, -1)), new Pose2d(3, 0, new Rotation2d(0)));
+        Trajectory traj = commandDrive.m_builder.Create(AutoConstants.startPos, List.of(new Translation2d(3, 1)),
+                new Pose2d(3, 1, new Rotation2d(0)));
 
         Command ramCommand = commandDrive.m_builder.Drive(traj);
 

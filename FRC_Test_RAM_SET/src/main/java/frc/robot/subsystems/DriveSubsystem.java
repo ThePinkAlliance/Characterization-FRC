@@ -18,6 +18,7 @@ import frc.robot.Constants.DriveConstants;
 import edu.wpi.first.wpilibj.geometry.Pose2d;
 import edu.wpi.first.wpilibj.kinematics.DifferentialDriveOdometry;
 import edu.wpi.first.wpilibj.kinematics.DifferentialDriveWheelSpeeds;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 
 public class DriveSubsystem extends SubsystemBase {
@@ -25,16 +26,16 @@ public class DriveSubsystem extends SubsystemBase {
 
   private final WPI_TalonFX m_left = setupWPI_TalonFX(DriveConstants.kLeftMotor1Port, Sides.LEFT, false);
   private final WPI_TalonFX m_leftFollower = setupWPI_TalonFX(DriveConstants.kLeftMotor2Port, Sides.FOLLOWER, true);
-  private final WPI_TalonFX m_right = setupWPI_TalonFX(DriveConstants.kRightMotor1Port, Sides.RIGHT, true);
-  private final WPI_TalonFX m_rightFollower = setupWPI_TalonFX(DriveConstants.kRightMotor2Port, Sides.FOLLOWER, false);
+  private final WPI_TalonFX m_right = setupWPI_TalonFX(DriveConstants.kRightMotor1Port, Sides.RIGHT, false);
+  private final WPI_TalonFX m_rightFollower = setupWPI_TalonFX(DriveConstants.kRightMotor2Port, Sides.FOLLOWER, true);
 
   private final int PIDIDX = 0;
 
-  Supplier<Double> leftEncoderPosition;
-  Supplier<Double> leftEncoderRate;
-  Supplier<Double> rightEncoderPosition;
-  Supplier<Double> rightEncoderRate;
-  Supplier<Double> gyroAngleRadians;
+  private Supplier<Double> leftEncoderPosition;
+  private Supplier<Double> leftEncoderRate;
+  private Supplier<Double> rightEncoderPosition;
+  private Supplier<Double> rightEncoderRate;
+  private Supplier<Double> gyroAngleRadians;
 
   public enum Sides {
     LEFT, RIGHT, FOLLOWER
@@ -78,10 +79,10 @@ public class DriveSubsystem extends SubsystemBase {
           // set right side methods = encoder methods
 
           motor.setSensorPhase(false);
-          rightEncoderPosition = () -> (motor.getSelectedSensorPosition(PIDIDX) * DriveConstants.encoderConstant); // *
-                                                                                                                   // -1.0;
-          rightEncoderRate = () -> (motor.getSelectedSensorVelocity(PIDIDX) * DriveConstants.encoderConstant * 10); // *
-                                                                                                                    // -1.0;
+          rightEncoderPosition = () -> (motor.getSelectedSensorPosition(PIDIDX) * DriveConstants.encoderConstant);// -
+                                                                                                                  // 1.0;
+          rightEncoderRate = () -> (motor.getSelectedSensorVelocity(PIDIDX) * DriveConstants.encoderConstant * 10); // -
+                                                                                                                    // 1.0;
 
           break;
         case LEFT:
@@ -100,7 +101,6 @@ public class DriveSubsystem extends SubsystemBase {
     }
 
     return motor;
-
   }
 
   public double GetEncoderPos(WPI_TalonFX motor, Sides side) {
@@ -110,8 +110,8 @@ public class DriveSubsystem extends SubsystemBase {
       case RIGHT:
         // set right side methods = encoder methods
 
-        motor.setSensorPhase(false);
-        double RightPos = (motor.getSelectedSensorPosition(PIDIDX) * DriveConstants.encoderConstant); // -1.0;
+        motor.setSensorPhase(true);
+        double RightPos = (motor.getSelectedSensorPosition(PIDIDX) * DriveConstants.encoderConstant); // - 1.0;
 
         return RightPos;
       case LEFT:
@@ -127,9 +127,32 @@ public class DriveSubsystem extends SubsystemBase {
     }
   }
 
+  public double GetEncoderRate(WPI_TalonFX motor, Sides side) {
+    switch (side) {
+      case RIGHT:
+        motor.setSensorPhase(true);
+        double RightRate = (motor.getSelectedSensorVelocity(PIDIDX) * DriveConstants.encoderConstant * 10);
+        return RightRate;
+
+      case LEFT:
+        motor.setSensorPhase(false);
+        double LeftRate = (motor.getSelectedSensorVelocity(PIDIDX) * DriveConstants.encoderConstant * 10);
+        return LeftRate;
+
+      default:
+        return 0.0;
+    }
+  }
+
   @Override
   public void periodic() {
     // Update the odometry in the periodic block
+    SmartDashboard.putNumber("encoder_left", GetEncoderPos(m_left, Sides.LEFT));
+    SmartDashboard.putNumber("encoder_right", GetEncoderPos(m_right, Sides.RIGHT));
+
+    SmartDashboard.putNumber("encoder_right_rate", rightEncoderRate.get());
+    SmartDashboard.putNumber("encoder_left_rate", leftEncoderRate.get());
+
     m_odometry.update(m_gyro.getRotation2d(), GetEncoderPos(m_left, Sides.LEFT), GetEncoderPos(m_right, Sides.RIGHT));
   }
 
@@ -148,7 +171,7 @@ public class DriveSubsystem extends SubsystemBase {
    * @return The current wheel speeds.
    */
   public DifferentialDriveWheelSpeeds getWheelSpeeds() {
-    return new DifferentialDriveWheelSpeeds(leftEncoderRate.get(), rightEncoderRate.get());
+    return new DifferentialDriveWheelSpeeds(GetEncoderRate(m_left, Sides.LEFT), GetEncoderRate(m_right, Sides.RIGHT));
   }
 
   /**

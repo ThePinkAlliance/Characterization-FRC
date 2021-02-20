@@ -1,0 +1,14 @@
+{
+  "folders": [
+	{
+		"path": "FRC_Test_RAM_SET"
+	},
+	{
+		"path": "Characterization-FRC-main"
+	}
+],
+  "settings": {
+    "java.configuration.updateBuildConfiguration": "automatic",
+    "java.server.launchMode": "Standard"
+  }
+}

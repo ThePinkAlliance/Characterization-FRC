@@ -4,9 +4,11 @@
 
 package frc.robot.subsystems;
 
+import java.util.function.DoubleSupplier;
 import java.util.function.Supplier;
 
 import com.ctre.phoenix.motorcontrol.FeedbackDevice;
+import com.ctre.phoenix.motorcontrol.InvertType;
 import com.ctre.phoenix.motorcontrol.NeutralMode;
 import com.ctre.phoenix.motorcontrol.can.WPI_TalonFX;
 import com.kauailabs.navx.frc.AHRS;
@@ -42,7 +44,7 @@ public class DriveSubsystem extends SubsystemBase {
   }
 
   // The robot's drive
-  private final DifferentialDrive m_drive = new DifferentialDrive(m_left, m_right);
+  private final DifferentialDrive m_drive = null;
 
   // The gyro sensor
   private final AHRS m_gyro = new AHRS(SPI.Port.kMXP);
@@ -52,10 +54,20 @@ public class DriveSubsystem extends SubsystemBase {
 
   /** Creates a new DriveSubsystem. */
   public DriveSubsystem() {
+
     gyroAngleRadians = () -> -1 * Math.toRadians(m_gyro.getAngle());
 
     resetEncoders();
     m_odometry = new DifferentialDriveOdometry(m_gyro.getRotation2d());
+
+    m_rightFollower.follow(m_right);
+    m_leftFollower.follow(m_left);
+
+    m_left.setInverted(false);
+    m_leftFollower.setInverted(false);
+
+    m_right.setInverted(true);
+    m_rightFollower.setInverted(true);
   }
 
   // methods to create and setup motors (reduce redundancy)
@@ -154,6 +166,14 @@ public class DriveSubsystem extends SubsystemBase {
     SmartDashboard.putNumber("encoder_left_rate", leftEncoderRate.get());
 
     m_odometry.update(m_gyro.getRotation2d(), GetEncoderPos(m_left, Sides.LEFT), GetEncoderPos(m_right, Sides.RIGHT));
+  }
+
+  public void TankDrive(DoubleSupplier l, DoubleSupplier r) {
+    // System.out.println("[LEFT] " + l.getAsDouble());
+    // System.out.println("[RIGHT] " + r.getAsDouble());
+
+    m_right.set(r.getAsDouble());
+    m_left.set(l.getAsDouble());
   }
 
   /**

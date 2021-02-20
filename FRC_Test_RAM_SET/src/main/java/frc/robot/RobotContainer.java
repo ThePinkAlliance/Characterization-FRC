@@ -10,18 +10,15 @@ import java.util.List;
 
 import edu.wpi.first.wpilibj.geometry.Pose2d;
 import edu.wpi.first.wpilibj.geometry.Rotation2d;
-import edu.wpi.first.wpilibj.GenericHID;
-import edu.wpi.first.wpilibj.XboxController;
+import edu.wpi.first.wpilibj.Joystick;
 import edu.wpi.first.wpilibj.geometry.Translation2d;
 import edu.wpi.first.wpilibj.trajectory.Trajectory;
 import frc.robot.Constants.AutoConstants;
 import frc.robot.Constants.OIConstants;
 import frc.robot.commands.CommandDrive;
+import frc.robot.commands.Teleop;
 import frc.robot.subsystems.DriveSubsystem;
-import frc.robot.subsystems.TrajectoryBuilder;
 import edu.wpi.first.wpilibj2.command.Command;
-import edu.wpi.first.wpilibj2.command.RunCommand;
-import edu.wpi.first.wpilibj2.command.button.JoystickButton;
 
 /**
  * This class is where the bulk of the robot should be declared. Since
@@ -32,27 +29,24 @@ import edu.wpi.first.wpilibj2.command.button.JoystickButton;
  */
 public class RobotContainer {
     // The robot's subsystems
-    private final DriveSubsystem m_robotDrive = new DriveSubsystem();
-    private final TrajectoryBuilder m_builder = new TrajectoryBuilder(m_robotDrive);
+
+    private DriveSubsystem drive = new DriveSubsystem();
     private final CommandDrive commandDrive = new CommandDrive();
+    private Joystick baseJS = new Joystick(0);
 
     // The driver's controller
-    XboxController m_driverController = new XboxController(OIConstants.kDriverControllerPort);
 
     /**
      * The container for the robot. Contains subsystems, OI devices, and commands.
      */
     public RobotContainer() {
         // Configure the button bindings
-        configureButtonBindings();
 
         // Configure default commands
         // Set the default drive command to split-stick arcade drive
-        m_robotDrive.setDefaultCommand(
-                // A split-stick arcade command, with forward/backward controlled by the left
-                // hand, and turning controlled by the right.
-                new RunCommand(() -> m_robotDrive.arcadeDrive(m_driverController.getY(GenericHID.Hand.kLeft),
-                        m_driverController.getX(GenericHID.Hand.kRight)), m_robotDrive));
+
+        drive.setDefaultCommand(
+                new Teleop(this.drive, () -> this.baseJS.getRawAxis(1), () -> this.baseJS.getRawAxis(3)));
     }
 
     /**
@@ -61,11 +55,6 @@ public class RobotContainer {
      * ({@link edu.wpi.first.wpilibj.Joystick} or {@link XboxController}), and then
      * calling passing it to a {@link JoystickButton}.
      */
-    private void configureButtonBindings() {
-        // Drive at half speed when the right bumper is held
-        new JoystickButton(m_driverController, Button.kBumperRight.value)
-                .whenPressed(() -> m_robotDrive.setMaxOutput(0.5)).whenReleased(() -> m_robotDrive.setMaxOutput(1));
-    }
 
     /**
      * Use this to pass the autonomous command to the main {@link Robot} class.

@@ -71,8 +71,6 @@ public class TrajectoryBuilder extends SubsystemBase {
     m_drive.resetOdometry(trajectory.getInitialPose());
 
     // Run path following command, then stop at the end.
-
-    // possible that m_drive.tankDriveVolts(0, 0) the zeros need to be a value
     return ramseteCommand.andThen(() -> m_drive.tankDriveVolts(0, 0));
   }
 

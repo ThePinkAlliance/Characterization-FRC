@@ -7,6 +7,7 @@ package frc.robot.subsystems;
 import java.util.function.DoubleSupplier;
 import java.util.function.Supplier;
 
+import com.ctre.phoenix.motorcontrol.ControlMode;
 import com.ctre.phoenix.motorcontrol.FeedbackDevice;
 import com.ctre.phoenix.motorcontrol.NeutralMode;
 import com.ctre.phoenix.motorcontrol.can.WPI_TalonFX;
@@ -229,16 +230,20 @@ public class DriveSubsystem extends SubsystemBase {
   }
 
   public void tankAutoDiff(double left, double right) {
-    m_right.set(right);
+    double left_power = left / 12;
+    double right_power = right / 12;
+
+    m_right.set(ControlMode.PercentOutput, right_power);
     m_right.feed();
 
-    m_left.set(left);
+    m_left.set(ControlMode.PercentOutput, left_power);
     m_left.feed();
   }
 
   /** Resets the drive encoders to currently read a position of 0. */
   public void resetEncoders() {
-
+    m_left.setSelectedSensorPosition(0);
+    m_right.setSelectedSensorPosition(0);
   }
 
   /**

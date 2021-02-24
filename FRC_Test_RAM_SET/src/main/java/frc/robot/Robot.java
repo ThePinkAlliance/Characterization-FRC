@@ -7,6 +7,7 @@ package frc.robot;
 import edu.wpi.first.wpilibj.TimedRobot;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
+import frc.robot.subsystems.TrajectoryBuilder;
 
 /**
  * The VM is configured to automatically run this class, and to call the
@@ -32,6 +33,8 @@ public class Robot extends TimedRobot {
     // autonomous chooser on the dashboard.
 
     m_robotContainer = new RobotContainer();
+
+    // m_robotContainer.Invert();
   }
 
   /**
@@ -70,6 +73,8 @@ public class Robot extends TimedRobot {
    */
   @Override
   public void autonomousInit() {
+    // m_robotContainer.unInvert();
+
     m_autonomousCommand = m_robotContainer.getAutonomousCommand();
 
     /*

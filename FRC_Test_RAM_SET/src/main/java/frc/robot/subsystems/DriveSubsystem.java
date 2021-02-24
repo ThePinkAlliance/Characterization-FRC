@@ -8,12 +8,12 @@ import java.util.function.DoubleSupplier;
 import java.util.function.Supplier;
 
 import com.ctre.phoenix.motorcontrol.FeedbackDevice;
-import com.ctre.phoenix.motorcontrol.InvertType;
 import com.ctre.phoenix.motorcontrol.NeutralMode;
 import com.ctre.phoenix.motorcontrol.can.WPI_TalonFX;
 import com.kauailabs.navx.frc.AHRS;
 
 import edu.wpi.first.wpilibj.SPI;
+import edu.wpi.first.wpilibj.SpeedControllerGroup;
 import edu.wpi.first.wpilibj.Encoder;
 import edu.wpi.first.wpilibj.drive.DifferentialDrive;
 import frc.robot.Constants.DriveConstants;
@@ -27,9 +27,12 @@ public class DriveSubsystem extends SubsystemBase {
   // The motors on the left side of the drive.
 
   private final WPI_TalonFX m_left = setupWPI_TalonFX(DriveConstants.kLeftMotor1Port, Sides.LEFT, false);
-  private final WPI_TalonFX m_leftFollower = setupWPI_TalonFX(DriveConstants.kLeftMotor2Port, Sides.FOLLOWER, true);
+  private final WPI_TalonFX m_leftFollower = setupWPI_TalonFX(DriveConstants.kLeftMotor2Port, Sides.FOLLOWER, false);
   private final WPI_TalonFX m_right = setupWPI_TalonFX(DriveConstants.kRightMotor1Port, Sides.RIGHT, false);
-  private final WPI_TalonFX m_rightFollower = setupWPI_TalonFX(DriveConstants.kRightMotor2Port, Sides.FOLLOWER, true);
+  private final WPI_TalonFX m_rightFollower = setupWPI_TalonFX(DriveConstants.kRightMotor2Port, Sides.FOLLOWER, false);
+
+  private final SpeedControllerGroup m_rightControllerGroup = new SpeedControllerGroup(m_right, m_rightFollower);
+  private final SpeedControllerGroup m_leftControllerGroup = new SpeedControllerGroup(m_left, m_leftFollower);
 
   private final int PIDIDX = 0;
 
@@ -44,7 +47,7 @@ public class DriveSubsystem extends SubsystemBase {
   }
 
   // The robot's drive
-  private final DifferentialDrive m_drive = null;
+  private final DifferentialDrive m_drive = new DifferentialDrive(m_leftControllerGroup, m_rightControllerGroup);
 
   // The gyro sensor
   private final AHRS m_gyro = new AHRS(SPI.Port.kMXP);
@@ -54,7 +57,7 @@ public class DriveSubsystem extends SubsystemBase {
 
   /** Creates a new DriveSubsystem. */
   public DriveSubsystem() {
-
+    m_drive.setSafetyEnabled(false);
     gyroAngleRadians = () -> -1 * Math.toRadians(m_gyro.getAngle());
 
     resetEncoders();
@@ -66,8 +69,8 @@ public class DriveSubsystem extends SubsystemBase {
     m_left.setInverted(false);
     m_leftFollower.setInverted(false);
 
-    m_right.setInverted(true);
-    m_rightFollower.setInverted(true);
+    m_right.setInverted(false);
+    m_rightFollower.setInverted(false);
   }
 
   // methods to create and setup motors (reduce redundancy)
@@ -77,7 +80,6 @@ public class DriveSubsystem extends SubsystemBase {
     // setup talon
     motor.configFactoryDefault();
     motor.setNeutralMode(NeutralMode.Brake);
-    motor.setInverted(inverted);
 
     // setup encoder if motor isn't a follower
     if (side != Sides.FOLLOWER) {
@@ -122,13 +124,10 @@ public class DriveSubsystem extends SubsystemBase {
       case RIGHT:
         // set right side methods = encoder methods
 
-        motor.setSensorPhase(true);
         double RightPos = (motor.getSelectedSensorPosition(PIDIDX) * DriveConstants.encoderConstant); // - 1.0;
 
         return RightPos;
       case LEFT:
-        motor.setSensorPhase(false);
-
         double LeftPos = (motor.getSelectedSensorPosition(PIDIDX) * DriveConstants.encoderConstant);
 
         return LeftPos;
@@ -142,12 +141,10 @@ public class DriveSubsystem extends SubsystemBase {
   public double GetEncoderRate(WPI_TalonFX motor, Sides side) {
     switch (side) {
       case RIGHT:
-        motor.setSensorPhase(true);
         double RightRate = (motor.getSelectedSensorVelocity(PIDIDX) * DriveConstants.encoderConstant * 10);
         return RightRate;
 
       case LEFT:
-        motor.setSensorPhase(false);
         double LeftRate = (motor.getSelectedSensorVelocity(PIDIDX) * DriveConstants.encoderConstant * 10);
         return LeftRate;
 
@@ -168,12 +165,17 @@ public class DriveSubsystem extends SubsystemBase {
     m_odometry.update(m_gyro.getRotation2d(), GetEncoderPos(m_left, Sides.LEFT), GetEncoderPos(m_right, Sides.RIGHT));
   }
 
-  public void TankDrive(DoubleSupplier l, DoubleSupplier r) {
-    // System.out.println("[LEFT] " + l.getAsDouble());
-    // System.out.println("[RIGHT] " + r.getAsDouble());
+  public void TankDriveDiff(DoubleSupplier l, DoubleSupplier r) {
+    m_drive.tankDrive(l.getAsDouble(), r.getAsDouble());
+    m_drive.feed();
+  }
 
+  public void TankDrive(DoubleSupplier l, DoubleSupplier r) {
     m_right.set(r.getAsDouble());
+    m_right.feed();
+
     m_left.set(l.getAsDouble());
+    m_left.feed();
   }
 
   /**
@@ -221,9 +223,17 @@ public class DriveSubsystem extends SubsystemBase {
    * @param rightVolts the commanded right output
    */
   public void tankDriveVolts(double leftVolts, double rightVolts) {
-    m_left.setVoltage(leftVolts);
-    m_right.setVoltage(-rightVolts);
+    m_left.setVoltage(-leftVolts);
+    m_right.setVoltage(rightVolts);
     m_drive.feed();
+  }
+
+  public void tankAutoDiff(double left, double right) {
+    m_right.set(right);
+    m_right.feed();
+
+    m_left.set(left);
+    m_left.feed();
   }
 
   /** Resets the drive encoders to currently read a position of 0. */

@@ -4,20 +4,11 @@
 
 package frc.robot;
 
-import static edu.wpi.first.wpilibj.XboxController.Button;
-
-import java.util.List;
-
-import edu.wpi.first.wpilibj.geometry.Pose2d;
-import edu.wpi.first.wpilibj.geometry.Rotation2d;
 import edu.wpi.first.wpilibj.Joystick;
-import edu.wpi.first.wpilibj.geometry.Translation2d;
-import edu.wpi.first.wpilibj.trajectory.Trajectory;
-import frc.robot.Constants.AutoConstants;
-import frc.robot.Constants.OIConstants;
 import frc.robot.commands.CommandDrive;
 import frc.robot.commands.Teleop;
 import frc.robot.subsystems.DriveSubsystem;
+import frc.robot.subsystems.TrajectoryBuilder;
 import edu.wpi.first.wpilibj2.command.Command;
 
 /**
@@ -31,7 +22,8 @@ public class RobotContainer {
     // The robot's subsystems
 
     private DriveSubsystem drive = new DriveSubsystem();
-    private final CommandDrive commandDrive = new CommandDrive();
+    private TrajectoryBuilder builder = new TrajectoryBuilder(drive);
+    // private final CommandDrive commandDrive = new CommandDrive();
     private Joystick baseJS = new Joystick(0);
 
     // The driver's controller
@@ -39,6 +31,7 @@ public class RobotContainer {
     /**
      * The container for the robot. Contains subsystems, OI devices, and commands.
      */
+
     public RobotContainer() {
         // Configure the button bindings
 
@@ -62,11 +55,6 @@ public class RobotContainer {
      * @return the command to run in autonomous
      */
     public Command getAutonomousCommand() {
-        Trajectory traj = commandDrive.m_builder.Create(AutoConstants.startPos, List.of(new Translation2d(3, 1)),
-                new Pose2d(3, 1, new Rotation2d(0)));
-
-        Command ramCommand = commandDrive.m_builder.Drive(traj);
-
-        return ramCommand;
+        return builder.getAutonomousCommand(drive);
     }
 }

@@ -33,7 +33,7 @@ public class Teleop extends CommandBase {
   // Called every time the scheduler runs while the command is scheduled.
   @Override
   public void execute() {
-    drive.TankDrive(leftJS, rightJS);
+    drive.TankDriveDiff(leftJS, rightJS);
   }
 
   // Called once the command ends or is interrupted.

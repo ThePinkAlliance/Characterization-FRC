@@ -4,12 +4,25 @@
 
 package frc.robot;
 
+import java.util.List;
+
 import edu.wpi.first.wpilibj.Joystick;
-import frc.robot.commands.CommandDrive;
+import edu.wpi.first.wpilibj.controller.PIDController;
+import edu.wpi.first.wpilibj.controller.RamseteController;
+import edu.wpi.first.wpilibj.controller.SimpleMotorFeedforward;
+import edu.wpi.first.wpilibj.geometry.Pose2d;
+import edu.wpi.first.wpilibj.geometry.Rotation2d;
+import edu.wpi.first.wpilibj.geometry.Translation2d;
+import edu.wpi.first.wpilibj.trajectory.Trajectory;
+import frc.robot.Constants.AutoConstants;
+import frc.robot.Constants.DriveConstants;
 import frc.robot.commands.Teleop;
+import frc.robot.commands.reset;
 import frc.robot.subsystems.DriveSubsystem;
 import frc.robot.subsystems.TrajectoryBuilder;
 import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.RamseteCommand;
+import edu.wpi.first.wpilibj2.command.button.JoystickButton;
 
 /**
  * This class is where the bulk of the robot should be declared. Since
@@ -23,7 +36,6 @@ public class RobotContainer {
 
     private DriveSubsystem drive = new DriveSubsystem();
     private TrajectoryBuilder builder = new TrajectoryBuilder(drive);
-    // private final CommandDrive commandDrive = new CommandDrive();
     private Joystick baseJS = new Joystick(0);
 
     // The driver's controller
@@ -40,6 +52,8 @@ public class RobotContainer {
 
         drive.setDefaultCommand(
                 new Teleop(this.drive, () -> this.baseJS.getRawAxis(1), () -> this.baseJS.getRawAxis(3)));
+
+        new JoystickButton(baseJS, 1).whenPressed(new reset(drive));
     }
 
     /**
@@ -55,6 +69,25 @@ public class RobotContainer {
      * @return the command to run in autonomous
      */
     public Command getAutonomousCommand() {
-        return builder.getAutonomousCommand(drive);
+        Trajectory mainTrajectory = builder.Create(new Pose2d(0, 0, new Rotation2d(0)),
+                // Pass through these two interior waypoints, making an 's' curve path
+                List.of(new Translation2d(1, 1), new Translation2d(2, -1)),
+                // End 3 meters straight ahead of where we started, facing forward
+                new Pose2d(2, 0, new Rotation2d(0)));
+
+        RamseteCommand ramseteCommand = new RamseteCommand(mainTrajectory, drive::getPose,
+                new RamseteController(AutoConstants.kRamseteB, AutoConstants.kRamseteZeta),
+                new SimpleMotorFeedforward(DriveConstants.ksVolts, DriveConstants.kvVoltSecondsPerMeter,
+                        DriveConstants.kaVoltSecondsSquaredPerMeter),
+                DriveConstants.kDriveKinematics, drive::getWheelSpeeds,
+                new PIDController(DriveConstants.kPDriveVel, 0, 0), new PIDController(DriveConstants.kPDriveVel, 0, 0),
+                // RamseteCommand passes volts to the callback
+                drive::tankAutoDiff, drive);
+
+        // Reset odometry to the starting pose of the trajectory.
+        drive.resetOdometry(mainTrajectory.getInitialPose());
+
+        // Run path following command, then stop at the end.
+        return ramseteCommand.andThen(() -> drive.tankAutoDiff(0, 0));
     }
 }

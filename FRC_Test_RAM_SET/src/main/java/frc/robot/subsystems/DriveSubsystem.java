@@ -110,7 +110,6 @@ public class DriveSubsystem extends SubsystemBase {
         default:
           // probably do nothing
           break;
-
       }
 
     }
@@ -162,6 +161,7 @@ public class DriveSubsystem extends SubsystemBase {
 
     SmartDashboard.putNumber("encoder_right_rate", rightEncoderRate.get());
     SmartDashboard.putNumber("encoder_left_rate", leftEncoderRate.get());
+    SmartDashboard.putNumber("navx angle", m_gyro.getAngle());
 
     m_odometry.update(m_gyro.getRotation2d(), GetEncoderPos(m_left, Sides.LEFT), GetEncoderPos(m_right, Sides.RIGHT));
   }
@@ -233,7 +233,15 @@ public class DriveSubsystem extends SubsystemBase {
     double left_power = left / 12;
     double right_power = right / 12;
 
-    m_right.set(ControlMode.PercentOutput, right_power);
+    System.out.println("left " + left);
+    System.out.println("right " + right);
+
+    System.out.println("left_power " + left_power);
+    System.out.println("right_power " + right_power);
+
+    System.out.println("gyro " + m_gyro.getRotation2d());
+
+    m_right.set(ControlMode.PercentOutput, right_power * -1.0);
     m_right.feed();
 
     m_left.set(ControlMode.PercentOutput, left_power);
@@ -242,6 +250,8 @@ public class DriveSubsystem extends SubsystemBase {
 
   /** Resets the drive encoders to currently read a position of 0. */
   public void resetEncoders() {
+    m_gyro.reset();
+
     m_left.setSelectedSensorPosition(0);
     m_right.setSelectedSensorPosition(0);
   }

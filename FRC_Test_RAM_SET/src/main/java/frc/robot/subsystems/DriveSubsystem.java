@@ -179,6 +179,11 @@ public class DriveSubsystem extends SubsystemBase {
     m_left.feed();
   }
 
+  public void ResetAll() {
+    resetEncoders();
+    resetOdometry(new Pose2d());
+  }
+
   /**
    * Returns the currently-estimated pose of the robot.
    *

@@ -69,6 +69,8 @@ public class RobotContainer {
      * @return the command to run in autonomous
      */
     public Command getAutonomousCommand() {
+        drive.ResetAll();
+
         Trajectory mainTrajectory = builder.Create(new Pose2d(0, 0, new Rotation2d(0)),
                 // Pass through these two interior waypoints, making an 's' curve path
                 List.of(new Translation2d(1, 1), new Translation2d(2, -1)),
